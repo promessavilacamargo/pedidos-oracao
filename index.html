@@ -1,0 +1,737 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Pedidos de Oração · Ministério de Mulheres</title>
+<meta name="robots" content="noindex, nofollow">
+<meta name="theme-color" content="#e23670">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="icon" href="icon-192.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Oração">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,600;0,700;1,600&family=Work+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    color-scheme: light dark;
+    --bg:#faf2f5;
+    --surface:#ffffff;
+    --surface-2:#fbe7ef;
+    --ink:#2a1b27;
+    --muted:#8c7386;
+    --line:#f0d3de;
+    --accent:#e23670;
+    --accent-deep:#a31f52;
+    --accent-ink:#ffffff;
+    --gold:#c8912f;
+    --ok:#2f8a5b;
+    --shadow: 0 16px 32px -22px rgba(42,27,39,0.4);
+  }
+  @media (prefers-color-scheme: dark){
+    :root{
+      --bg:#1a1220;
+      --surface:#241a29;
+      --surface-2:#2e1e33;
+      --ink:#f5e9f1;
+      --muted:#b79fb0;
+      --line:#4a2e44;
+      --accent:#f0568c;
+      --accent-deep:#f07aa4;
+      --accent-ink:#241a29;
+      --gold:#e8b75b;
+      --ok:#5cc08a;
+      --shadow: 0 16px 32px -20px rgba(0,0,0,0.6);
+    }
+  }
+  *{ box-sizing:border-box; }
+  html, body{ margin:0; padding:0; }
+  body{
+    background:var(--bg);
+    color:var(--ink);
+    font-family:"Work Sans", system-ui, sans-serif;
+    min-height:100vh;
+  }
+  button{ font-family:inherit; }
+  [hidden]{ display:none !important; }
+
+  /* ---------- Lock ---------- */
+  .lock{
+    min-height:100vh;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    padding:32px 16px;
+  }
+  .lock-card{
+    width:100%;
+    max-width:400px;
+    background:var(--surface);
+    border:1px solid var(--line);
+    border-radius:22px;
+    padding:32px 24px;
+    text-align:center;
+    box-shadow:var(--shadow);
+  }
+  .logo-box{
+    background:#fff;
+    border-radius:16px;
+    padding:10px 14px;
+    display:inline-block;
+  }
+  .logo-box img{ width:min(230px, 70vw); height:auto; display:block; }
+  .lock h1{
+    font-family:"Playfair Display", Georgia, serif;
+    font-style:italic;
+    font-size:2rem;
+    margin:18px 0 6px;
+  }
+  .lock p{ color:var(--muted); margin:0 0 20px; line-height:1.5; }
+  .lock input{ text-align:center; font-size:1.1rem; }
+  .lock .btn-primary{ margin-top:12px; }
+  .lock .err{ color:var(--accent-deep); font-weight:600; margin-top:12px; min-height:1.2em; }
+
+  input, textarea, select{
+    font-family:inherit;
+    font-size:1rem;
+    color:var(--ink);
+    background:var(--bg);
+    border:1px solid var(--line);
+    border-radius:12px;
+    padding:12px 14px;
+    width:100%;
+  }
+  input:focus, textarea:focus, select:focus{ outline:2px solid var(--accent); outline-offset:1px; }
+  textarea{ resize:vertical; min-height:110px; }
+  .btn-primary{
+    width:100%;
+    background:var(--accent);
+    color:var(--accent-ink);
+    font-weight:700;
+    font-size:1.05rem;
+    border:none;
+    border-radius:999px;
+    padding:14px 20px;
+    cursor:pointer;
+  }
+  .btn-primary:disabled{ opacity:.6; cursor:wait; }
+
+  /* ---------- App ---------- */
+  .page{ max-width:680px; margin:0 auto; padding:20px 16px 120px; }
+  header.top{
+    display:flex;
+    align-items:center;
+    gap:14px;
+    margin-bottom:16px;
+  }
+  header.top .logo-box{ padding:6px 8px; border-radius:12px; flex:0 0 auto; }
+  header.top .logo-box img{ width:56px; }
+  header.top h1{
+    font-family:"Playfair Display", Georgia, serif;
+    font-style:italic;
+    font-size:1.6rem;
+    margin:0;
+    line-height:1.1;
+  }
+  header.top .sub{ font-size:.85rem; color:var(--muted); margin-top:2px; }
+  .role-badge{
+    margin-left:auto;
+    font-size:.72rem;
+    font-weight:700;
+    letter-spacing:.08em;
+    text-transform:uppercase;
+    background:var(--gold);
+    color:#2a1b27;
+    border-radius:999px;
+    padding:5px 10px;
+    white-space:nowrap;
+  }
+
+  .status{
+    border-radius:14px;
+    padding:12px 14px;
+    font-size:.92rem;
+    line-height:1.45;
+    margin-bottom:16px;
+    border:1px solid var(--line);
+    background:var(--surface-2);
+  }
+  .status.open{ background:var(--accent); color:var(--accent-ink); border-color:transparent; font-weight:600; }
+
+  .tabs{
+    display:flex;
+    gap:8px;
+    overflow-x:auto;
+    padding-bottom:4px;
+    margin-bottom:16px;
+    scrollbar-width:none;
+  }
+  .tabs::-webkit-scrollbar{ display:none; }
+  .tab{
+    flex:0 0 auto;
+    border:1px solid var(--line);
+    background:var(--surface);
+    color:var(--ink);
+    border-radius:999px;
+    padding:9px 14px;
+    font-size:.92rem;
+    font-weight:600;
+    cursor:pointer;
+  }
+  .tab .count{ color:var(--muted); font-weight:500; margin-left:4px; }
+  .tab[aria-selected="true"]{ background:var(--accent); color:var(--accent-ink); border-color:transparent; }
+  .tab[aria-selected="true"] .count{ color:inherit; opacity:.8; }
+
+  .list{ display:flex; flex-direction:column; gap:12px; }
+  .card{
+    background:var(--surface);
+    border:1px solid var(--line);
+    border-radius:18px;
+    padding:18px 18px 14px;
+    box-shadow:var(--shadow);
+  }
+  .card .nome{
+    font-family:"Playfair Display", Georgia, serif;
+    font-weight:700;
+    font-size:1.5rem;
+    line-height:1.2;
+    margin:0 0 6px;
+    word-break:break-word;
+  }
+  .card .pedido{
+    font-size:1rem;
+    color:var(--muted);
+    line-height:1.5;
+    margin:0;
+    white-space:pre-line;
+    word-break:break-word;
+  }
+  .card .foot{
+    display:flex;
+    align-items:center;
+    gap:8px;
+    flex-wrap:wrap;
+    margin-top:14px;
+  }
+  .card .when{ font-size:.78rem; color:var(--muted); margin-right:auto; }
+  .pray-btn{
+    border:1px solid var(--accent);
+    background:transparent;
+    color:var(--accent-deep);
+    border-radius:999px;
+    padding:8px 14px;
+    font-weight:600;
+    font-size:.9rem;
+    cursor:pointer;
+  }
+  .pray-btn.done{ background:var(--accent); color:var(--accent-ink); border-color:transparent; }
+  .card.answered{ border-color:var(--gold); }
+  .card .grace{ color:var(--gold); font-weight:700; font-size:.85rem; margin-bottom:6px; }
+  .admin{
+    display:flex;
+    gap:6px;
+    flex-wrap:wrap;
+    margin-top:12px;
+    padding-top:10px;
+    border-top:1px dashed var(--line);
+  }
+  .admin button{
+    background:var(--surface-2);
+    border:1px solid var(--line);
+    color:var(--ink);
+    border-radius:999px;
+    padding:6px 12px;
+    font-size:.82rem;
+    font-weight:600;
+    cursor:pointer;
+  }
+  .admin button.danger{ color:var(--accent-deep); }
+
+  .empty{
+    text-align:center;
+    color:var(--muted);
+    padding:40px 16px;
+    line-height:1.6;
+  }
+
+  .fab{
+    position:fixed;
+    left:50%;
+    transform:translateX(-50%);
+    bottom:calc(20px + env(safe-area-inset-bottom));
+    width:min(420px, calc(100% - 32px));
+    box-shadow:0 12px 28px -10px rgba(163,31,82,.6);
+    z-index:5;
+  }
+
+  .footer-links{
+    display:flex;
+    justify-content:center;
+    gap:6px 16px;
+    flex-wrap:wrap;
+    margin-top:28px;
+  }
+  .link-btn{
+    background:none;
+    border:none;
+    color:var(--accent-deep);
+    font-weight:600;
+    font-size:.9rem;
+    text-decoration:underline;
+    cursor:pointer;
+    padding:6px;
+  }
+
+  /* ---------- Modal ---------- */
+  .overlay{
+    position:fixed;
+    inset:0;
+    background:rgba(20,10,18,.55);
+    display:flex;
+    align-items:flex-end;
+    justify-content:center;
+    z-index:20;
+    padding:16px;
+  }
+  @media (min-width:600px){ .overlay{ align-items:center; } }
+  .sheet{
+    width:100%;
+    max-width:520px;
+    max-height:calc(100vh - 32px);
+    overflow:auto;
+    background:var(--surface);
+    border-radius:22px;
+    padding:22px 20px;
+  }
+  .sheet h2{
+    font-family:"Playfair Display", Georgia, serif;
+    font-style:italic;
+    font-size:1.5rem;
+    margin:0 0 14px;
+  }
+  .field{ display:flex; flex-direction:column; gap:6px; margin-bottom:14px; }
+  .field label{ font-weight:600; font-size:.92rem; }
+  .hint{ font-size:.8rem; color:var(--muted); }
+  .sheet .row{ display:flex; gap:10px; margin-top:6px; }
+  .sheet .row .btn-primary{ flex:1; }
+  .btn-ghost{
+    flex:0 0 auto;
+    background:transparent;
+    border:1px solid var(--line);
+    color:var(--ink);
+    border-radius:999px;
+    padding:14px 18px;
+    font-weight:600;
+    cursor:pointer;
+  }
+
+  /* ---------- Telão ---------- */
+  .telao{
+    position:fixed;
+    inset:0;
+    z-index:30;
+    background:linear-gradient(160deg, #2a1b3d, #7a2350);
+    color:#fff;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content:center;
+    text-align:center;
+    padding:6vh 6vw;
+  }
+  .telao .t-cat{ font-size:clamp(1rem, 2.4vw, 1.6rem); letter-spacing:.2em; text-transform:uppercase; color:#f3c0d6; font-weight:700; }
+  .telao .t-nome{ font-family:"Playfair Display", Georgia, serif; font-weight:700; font-size:clamp(2.6rem, 8vw, 6.5rem); line-height:1.05; margin:3vh 0 2vh; }
+  .telao .t-pedido{ font-size:clamp(1.2rem, 3vw, 2.4rem); line-height:1.45; max-width:1100px; color:#f6e3ec; }
+  .telao .t-foot{ position:absolute; bottom:3vh; left:0; right:0; font-size:clamp(.9rem,1.6vw,1.2rem); color:#e7b8cd; }
+  .telao .t-close{
+    position:absolute;
+    top:16px;
+    right:16px;
+    background:rgba(255,255,255,.15);
+    color:#fff;
+    border:none;
+    border-radius:999px;
+    padding:10px 16px;
+    font-weight:600;
+    cursor:pointer;
+  }
+  .telao .t-fade{ transition:opacity .6s ease; }
+
+  .toast{
+    position:fixed;
+    left:50%;
+    bottom:96px;
+    transform:translateX(-50%);
+    background:var(--ink);
+    color:var(--bg);
+    padding:10px 18px;
+    border-radius:999px;
+    font-size:.88rem;
+    font-weight:600;
+    opacity:0;
+    pointer-events:none;
+    transition:opacity .25s ease;
+    z-index:40;
+    max-width:calc(100% - 32px);
+    text-align:center;
+  }
+  .toast.show{ opacity:1; }
+</style>
+</head>
+<body>
+
+<!-- Tela de senha -->
+<section class="lock" id="lockScreen">
+  <form class="lock-card" id="lockForm">
+    <div class="logo-box"><img src="logo.png" alt="Ministério de Mulheres Vila Camargo"></div>
+    <h1>Pedidos de Oração</h1>
+    <p id="lockMsg">Digite a senha do grupo de oração para entrar.</p>
+    <input type="password" id="senhaInput" autocomplete="current-password" placeholder="Senha" required>
+    <button class="btn-primary" type="submit" id="lockBtn">Entrar</button>
+    <div class="err" id="lockErr"></div>
+    <button type="button" class="link-btn" id="lockCancel" hidden>Voltar</button>
+  </form>
+</section>
+
+<!-- App -->
+<div class="page" id="app" hidden>
+  <header class="top">
+    <div class="logo-box"><img src="icon-192.png" alt=""></div>
+    <div>
+      <h1>Pedidos de Oração</h1>
+      <div class="sub">Ministério de Mulheres · Vila Camargo</div>
+    </div>
+    <span class="role-badge" id="roleBadge" hidden>Diretoria</span>
+  </header>
+
+  <div class="status" id="status"></div>
+
+  <nav class="tabs" role="tablist" id="tabs">
+    <button class="tab" role="tab" data-tab="irmas">Pedidos das irmãs<span class="count"></span></button>
+    <button class="tab" role="tab" data-tab="libertacao">Libertação<span class="count"></span></button>
+    <button class="tab" role="tab" data-tab="outros">Outros<span class="count"></span></button>
+    <button class="tab" role="tab" data-tab="graca">Graças alcançadas 🙌<span class="count"></span></button>
+  </nav>
+
+  <div class="list" id="list"></div>
+
+  <div class="footer-links">
+    <button class="link-btn" id="telaoBtn">Modo telão</button>
+    <button class="link-btn" id="diretoriaBtn">Área da diretoria</button>
+    <button class="link-btn" id="sairBtn">Sair</button>
+  </div>
+</div>
+
+<button class="btn-primary fab" id="fab" hidden>+ Incluir pedido de oração</button>
+
+<!-- Formulário -->
+<div class="overlay" id="formOverlay" hidden>
+  <form class="sheet" id="pedidoForm">
+    <h2 id="formTitle">Novo pedido</h2>
+    <div class="field">
+      <label for="fCategoria">Tipo de pedido</label>
+      <select id="fCategoria">
+        <option value="irmas">Pedido das irmãs (pessoal)</option>
+        <option value="libertacao">Libertação (vícios, drogas)</option>
+        <option value="outros">Outros</option>
+      </select>
+    </div>
+    <div class="field">
+      <label for="fNome">Por quem vamos orar? *</label>
+      <span class="hint">Nos pedidos delicados, use só o primeiro nome (ex.: "Filho da irmã Ana").</span>
+      <input type="text" id="fNome" maxlength="80" required>
+    </div>
+    <div class="field">
+      <label for="fPedido">Pedido *</label>
+      <textarea id="fPedido" maxlength="600" required></textarea>
+    </div>
+    <div class="row">
+      <button type="button" class="btn-ghost" id="formCancel">Cancelar</button>
+      <button type="submit" class="btn-primary" id="formSubmit">Salvar pedido</button>
+    </div>
+  </form>
+</div>
+
+<!-- Telão -->
+<div class="telao" id="telao" hidden>
+  <button class="t-close" id="telaoClose">Fechar ✕</button>
+  <div class="t-fade" id="telaoBox">
+    <div class="t-cat" id="tCat"></div>
+    <div class="t-nome" id="tNome"></div>
+    <div class="t-pedido" id="tPedido"></div>
+  </div>
+  <div class="t-foot" id="tFoot"></div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+(function(){
+  // URL /exec do Apps Script da planilha "PEDIDOS DE ORAÇÃO"
+  var API = '';
+  var KEY_SENHA = 'pedidos-oracao-senha';
+  var KEY_ORANDO = 'pedidos-oracao-orando';
+  var KEY_TAB = 'pedidos-oracao-aba';
+  var CAT_NOME = { irmas:'Pedidos das irmãs', libertacao:'Libertação', outros:'Outros', graca:'Graças alcançadas' };
+
+  var state = { senha:'', papel:'', podeIncluir:false, pedidos:[], tab:'irmas', editId:null };
+  var $ = function(id){ return document.getElementById(id); };
+
+  function store(k, v){ try{ if(v == null) localStorage.removeItem(k); else localStorage.setItem(k, v); }catch(e){} }
+  function load(k){ try{ return localStorage.getItem(k); }catch(e){ return null; } }
+  function orandoSet(){ try{ return JSON.parse(load(KEY_ORANDO) || '{}'); }catch(e){ return {}; } }
+
+  function toast(msg){
+    var t = $('toast'); t.textContent = msg; t.classList.add('show');
+    clearTimeout(toast._t); toast._t = setTimeout(function(){ t.classList.remove('show'); }, 2600);
+  }
+
+  function api(body){
+    body.senha = body.senha || state.senha;
+    return fetch(API, { method:'POST', body: JSON.stringify(body) })
+      .then(function(r){ return r.json(); });
+  }
+
+  function aplicar(res){
+    state.papel = res.papel;
+    state.podeIncluir = res.podeIncluir;
+    state.pedidos = res.pedidos || [];
+    var st = $('status');
+    if(res.papel === 'diretoria'){
+      st.className = 'status';
+      st.textContent = 'Você está como diretoria: pode incluir, editar, marcar graça alcançada e remover pedidos a qualquer hora. Inclusão aberta para todas: ' + lower(res.janelaTexto) + '.';
+    }else if(res.janelaAberta){
+      st.className = 'status open';
+      st.textContent = '🙏 Inclusão de pedidos aberta para todas até ' + res.abertaAte + '.';
+    }else{
+      st.className = 'status';
+      st.textContent = 'Inclusão de pedidos aberta para todas: ' + lower(res.janelaTexto) + '. Fora desse horário, fale com a diretoria.';
+    }
+    $('roleBadge').hidden = res.papel !== 'diretoria';
+    $('diretoriaBtn').hidden = res.papel === 'diretoria';
+    $('fab').hidden = !res.podeIncluir;
+    render();
+  }
+  function lower(s){ return s ? s.charAt(0).toLowerCase() + s.slice(1) : ''; }
+
+  function filtrar(tab){
+    return state.pedidos.filter(function(p){
+      if(tab === 'graca') return p.status === 'respondido';
+      return p.status !== 'respondido' && p.categoria === tab;
+    }).sort(function(a,b){
+      var da = tab === 'graca' ? (a.atualizado || a.data) : a.data;
+      var db = tab === 'graca' ? (b.atualizado || b.data) : b.data;
+      return da < db ? 1 : -1;
+    });
+  }
+
+  function quando(iso){
+    var d = new Date(iso); if(isNaN(d)) return '';
+    var dias = Math.floor((Date.now() - d.getTime()) / 86400000);
+    if(dias <= 0) return 'hoje';
+    if(dias === 1) return 'ontem';
+    if(dias < 30) return 'há ' + dias + ' dias';
+    return d.toLocaleDateString('pt-BR');
+  }
+
+  function el(tag, cls, text){
+    var e = document.createElement(tag);
+    if(cls) e.className = cls;
+    if(text != null) e.textContent = text;
+    return e;
+  }
+
+  function render(){
+    document.querySelectorAll('.tab').forEach(function(b){
+      var t = b.getAttribute('data-tab');
+      b.setAttribute('aria-selected', t === state.tab ? 'true' : 'false');
+      b.querySelector('.count').textContent = filtrar(t).length;
+    });
+    var list = $('list');
+    list.innerHTML = '';
+    var itens = filtrar(state.tab);
+    if(!itens.length){
+      list.appendChild(el('div', 'empty', state.tab === 'graca'
+        ? 'Quando um pedido for respondido, a diretoria marca aqui como graça alcançada. 🙌'
+        : 'Nenhum pedido aqui ainda.'));
+      return;
+    }
+    var orados = orandoSet();
+    itens.forEach(function(p){
+      var c = el('article', 'card' + (p.status === 'respondido' ? ' answered' : ''));
+      if(p.status === 'respondido') c.appendChild(el('div', 'grace', '🙌 Graça alcançada'));
+      c.appendChild(el('h3', 'nome', p.nome));
+      c.appendChild(el('p', 'pedido', p.pedido));
+      var foot = el('div', 'foot');
+      foot.appendChild(el('span', 'when', (state.tab === 'graca' ? CAT_NOME[p.categoria] + ' · ' : '') + quando(p.data)));
+      var b = el('button', 'pray-btn' + (orados[p.id] ? ' done' : ''), (orados[p.id] ? '🙏 Orando' : '🙏 Estou orando') + (p.orando ? ' · ' + p.orando : ''));
+      b.addEventListener('click', function(){ orar(p, b); });
+      foot.appendChild(b);
+      c.appendChild(foot);
+      if(state.papel === 'diretoria'){
+        var adm = el('div', 'admin');
+        if(p.status === 'respondido') adm.appendChild(botao('Voltar para pedidos', function(){ acao('reativar', p); }));
+        else adm.appendChild(botao('🙌 Graça alcançada', function(){ acao('graca', p); }));
+        adm.appendChild(botao('Editar', function(){ abrirForm(p); }));
+        var rm = botao('Remover', function(){
+          if(rm.dataset.confirm){ acao('remover', p); }
+          else{ rm.dataset.confirm = '1'; rm.textContent = 'Toque de novo para remover'; }
+        });
+        rm.classList.add('danger');
+        adm.appendChild(rm);
+        c.appendChild(adm);
+      }
+      list.appendChild(c);
+    });
+  }
+  function botao(txt, fn){ var b = el('button', '', txt); b.type = 'button'; b.addEventListener('click', fn); return b; }
+
+  function orar(p, btn){
+    var set = orandoSet();
+    if(set[p.id]){ toast('Você já está orando por ' + p.nome + ' 💗'); return; }
+    set[p.id] = 1; store(KEY_ORANDO, JSON.stringify(set));
+    p.orando = (p.orando || 0) + 1;
+    btn.classList.add('done'); btn.textContent = '🙏 Orando · ' + p.orando;
+    api({ acao:'orar', id:p.id }).catch(function(){});
+  }
+
+  function acao(nome, p){
+    api({ acao:nome, id:p.id }).then(function(res){
+      if(!res.ok) return erro(res);
+      aplicar(res);
+      toast(nome === 'graca' ? 'Glória a Deus! Movido para Graças alcançadas 🙌' : nome === 'remover' ? 'Pedido removido.' : 'Pedido atualizado.');
+    }).catch(function(){ toast('Sem conexão. Tente de novo.'); });
+  }
+
+  function erro(res){
+    if(res.erro === 'senha'){ sair(); $('lockErr').textContent = 'A senha mudou. Digite a nova senha.'; return; }
+    if(res.erro === 'fechado'){ toast('A inclusão de pedidos está fechada agora.'); atualizar(); return; }
+    if(res.erro === 'campos'){ toast('Preencha o nome e o pedido.'); return; }
+    toast('Algo deu errado. Tente de novo.');
+  }
+
+  function abrirForm(p){
+    state.editId = p ? p.id : null;
+    $('formTitle').textContent = p ? 'Editar pedido' : 'Novo pedido';
+    $('fCategoria').value = p ? p.categoria : (state.tab === 'graca' ? 'irmas' : state.tab);
+    $('fNome').value = p ? p.nome : '';
+    $('fPedido').value = p ? p.pedido : '';
+    $('formOverlay').hidden = false;
+    setTimeout(function(){ $('fNome').focus(); }, 50);
+  }
+  function fecharForm(){ $('formOverlay').hidden = true; }
+
+  $('pedidoForm').addEventListener('submit', function(e){
+    e.preventDefault();
+    var nome = $('fNome').value.trim(), pedido = $('fPedido').value.trim();
+    if(!nome || !pedido){ toast('Preencha o nome e o pedido.'); return; }
+    var btn = $('formSubmit'); btn.disabled = true; btn.textContent = 'Salvando…';
+    var body = { acao: state.editId ? 'editar' : 'incluir', id: state.editId, categoria:$('fCategoria').value, nome:nome, pedido:pedido };
+    api(body).then(function(res){
+      if(!res.ok) return erro(res);
+      if(!state.editId) state.tab = body.categoria;
+      fecharForm(); aplicar(res);
+      toast(state.editId ? 'Pedido atualizado.' : 'Pedido incluído. Vamos orar! 🙏');
+    }).catch(function(){ toast('Sem conexão. Tente de novo.'); })
+      .then(function(){ btn.disabled = false; btn.textContent = 'Salvar pedido'; });
+  });
+  $('formCancel').addEventListener('click', fecharForm);
+  $('formOverlay').addEventListener('click', function(e){ if(e.target === this) fecharForm(); });
+  $('fab').addEventListener('click', function(){ abrirForm(null); });
+
+  document.querySelectorAll('.tab').forEach(function(b){
+    b.addEventListener('click', function(){ state.tab = b.getAttribute('data-tab'); store(KEY_TAB, state.tab); render(); });
+  });
+
+  // ---------- Senha ----------
+  var entrandoDiretoria = false;
+  function mostrarLock(diretoria){
+    entrandoDiretoria = !!diretoria;
+    $('lockMsg').textContent = diretoria ? 'Digite a senha da diretoria.' : 'Digite a senha do grupo de oração para entrar.';
+    $('lockCancel').hidden = !diretoria;
+    $('lockErr').textContent = '';
+    $('senhaInput').value = '';
+    $('app').hidden = true; $('fab').hidden = true;
+    $('lockScreen').hidden = false;
+    setTimeout(function(){ $('senhaInput').focus(); }, 50);
+  }
+  function mostrarApp(){ $('lockScreen').hidden = true; $('app').hidden = false; }
+
+  $('lockForm').addEventListener('submit', function(e){
+    e.preventDefault();
+    var s = $('senhaInput').value.trim();
+    if(!s) return;
+    var btn = $('lockBtn'); btn.disabled = true; btn.textContent = 'Entrando…';
+    api({ acao:'listar', senha:s }).then(function(res){
+      if(!res.ok){ $('lockErr').textContent = res.erro === 'senha' ? 'Senha incorreta.' : 'Algo deu errado. Tente de novo.'; return; }
+      if(entrandoDiretoria && res.papel !== 'diretoria'){ $('lockErr').textContent = 'Essa não é a senha da diretoria.'; return; }
+      state.senha = s; store(KEY_SENHA, s);
+      mostrarApp(); aplicar(res);
+    }).catch(function(){ $('lockErr').textContent = 'Sem conexão. Verifique a internet.'; })
+      .then(function(){ btn.disabled = false; btn.textContent = 'Entrar'; });
+  });
+  $('lockCancel').addEventListener('click', function(){ if(state.senha){ mostrarApp(); $('fab').hidden = !state.podeIncluir; } });
+  $('diretoriaBtn').addEventListener('click', function(){ mostrarLock(true); });
+  function sair(){ state.senha = ''; store(KEY_SENHA, null); mostrarLock(false); }
+  $('sairBtn').addEventListener('click', sair);
+
+  function atualizar(){
+    if(!state.senha || !$('formOverlay').hidden) return;
+    api({ acao:'listar' }).then(function(res){ if(res.ok) aplicar(res); else erro(res); }).catch(function(){});
+  }
+  setInterval(atualizar, 60000);
+  document.addEventListener('visibilitychange', function(){ if(!document.hidden) atualizar(); });
+
+  // ---------- Telão ----------
+  var tTimer = null, tIdx = 0;
+  function telaoItens(){
+    var tab = state.tab;
+    var itens = filtrar(tab);
+    if(!itens.length && tab !== 'graca') itens = state.pedidos.filter(function(p){ return p.status !== 'respondido'; });
+    return itens;
+  }
+  function telaoShow(){
+    var itens = telaoItens();
+    if(!itens.length){ $('tNome').textContent = 'Nenhum pedido ainda'; $('tCat').textContent = ''; $('tPedido').textContent = ''; $('tFoot').textContent = ''; return; }
+    tIdx = tIdx % itens.length;
+    var p = itens[tIdx];
+    var box = $('telaoBox');
+    box.style.opacity = 0;
+    setTimeout(function(){
+      $('tCat').textContent = p.status === 'respondido' ? '🙌 Graça alcançada' : CAT_NOME[p.categoria];
+      $('tNome').textContent = p.nome;
+      $('tPedido').textContent = p.pedido;
+      $('tFoot').textContent = (tIdx + 1) + ' de ' + itens.length + ' · toque na tela para passar';
+      box.style.opacity = 1;
+    }, 400);
+  }
+  function telaoNext(){ tIdx++; telaoShow(); }
+  $('telaoBtn').addEventListener('click', function(){
+    tIdx = 0; $('telao').hidden = false; $('fab').hidden = true;
+    try{ document.documentElement.requestFullscreen && document.documentElement.requestFullscreen(); }catch(e){}
+    telaoShow(); tTimer = setInterval(telaoNext, 10000);
+  });
+  $('telao').addEventListener('click', function(e){ if(e.target.id !== 'telaoClose'){ clearInterval(tTimer); telaoNext(); tTimer = setInterval(telaoNext, 10000); } });
+  $('telaoClose').addEventListener('click', function(){
+    clearInterval(tTimer); $('telao').hidden = true; $('fab').hidden = !state.podeIncluir;
+    try{ document.fullscreenElement && document.exitFullscreen(); }catch(e){}
+  });
+
+  // ---------- Início ----------
+  state.tab = load(KEY_TAB) || 'irmas';
+  var salva = load(KEY_SENHA);
+  if(salva){
+    state.senha = salva;
+    mostrarApp();
+    $('list').appendChild(el('div', 'empty', 'Carregando pedidos…'));
+    api({ acao:'listar' }).then(function(res){ if(res.ok) aplicar(res); else erro(res); })
+      .catch(function(){ $('list').innerHTML = ''; $('list').appendChild(el('div', 'empty', 'Sem conexão. Verifique a internet e recarregue.')); });
+  }else{
+    mostrarLock(false);
+  }
+})();
+</script>
+</body>
+</html>
