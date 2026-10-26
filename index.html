@@ -227,6 +227,20 @@
     cursor:pointer;
   }
   .pray-btn.done{ background:var(--accent); color:var(--accent-ink); border-color:transparent; }
+  .card{ border-left:6px solid var(--cat, var(--accent)); }
+  .chip{
+    display:inline-block;
+    font-size:.72rem;
+    font-weight:700;
+    letter-spacing:.06em;
+    text-transform:uppercase;
+    color:#fff;
+    background:var(--cat, var(--accent));
+    border-radius:999px;
+    padding:4px 10px;
+    margin-bottom:8px;
+  }
+  .tab .dot{ display:inline-block; width:9px; height:9px; border-radius:50%; background:var(--cat); margin-right:6px; vertical-align:1px; }
   .card.answered{ border-color:var(--gold); }
   .card .grace{ color:var(--gold); font-weight:700; font-size:.85rem; margin-bottom:6px; }
   .admin{
@@ -408,12 +422,7 @@
 
   <div class="status" id="status"></div>
 
-  <nav class="tabs" role="tablist" id="tabs">
-    <button class="tab" role="tab" data-tab="irmas">Pedidos das irmãs<span class="count"></span></button>
-    <button class="tab" role="tab" data-tab="libertacao">Libertação<span class="count"></span></button>
-    <button class="tab" role="tab" data-tab="outros">Outros<span class="count"></span></button>
-    <button class="tab" role="tab" data-tab="graca">Graças alcançadas 🙌<span class="count"></span></button>
-  </nav>
+  <nav class="tabs" role="tablist" id="tabs"></nav>
 
   <div class="list" id="list"></div>
 
@@ -432,11 +441,11 @@
     <h2 id="formTitle">Novo pedido</h2>
     <div class="field">
       <label for="fCategoria">Tipo de pedido</label>
-      <select id="fCategoria">
-        <option value="irmas">Pedido das irmãs (pessoal)</option>
-        <option value="libertacao">Libertação (vícios, drogas)</option>
-        <option value="outros">Outros</option>
-      </select>
+      <select id="fCategoria"></select>
+    </div>
+    <div class="field" id="novaCatField" hidden>
+      <label for="fNovaCat">Nome da nova categoria *</label>
+      <input type="text" id="fNovaCat" maxlength="30" placeholder="Ex.: Casamento, Estudos, Viagem">
     </div>
     <div class="field">
       <label for="fNome">Por quem vamos orar? *</label>
@@ -470,13 +479,29 @@
 <script>
 (function(){
   // URL /exec do Apps Script da planilha "PEDIDOS DE ORAÇÃO"
-  var API = '';
+  var API = 'https://script.google.com/macros/s/AKfycbw9Ac7YkCJhmeJQVUvGNAILwxPv19aksVyw0vJ6HNtMVUWX52Q4xXM5nsFFxCr4KULo7Q/exec';
   var KEY_SENHA = 'pedidos-oracao-senha';
   var KEY_ORANDO = 'pedidos-oracao-orando';
   var KEY_TAB = 'pedidos-oracao-aba';
-  var CAT_NOME = { irmas:'Pedidos das irmãs', libertacao:'Libertação', outros:'Outros', graca:'Graças alcançadas' };
+  var CATS_FIXAS = ['Pedidos das irmãs', 'Saúde', 'Família', 'Emprego', 'Libertação', 'Outros'];
+  var CORES_FIXAS = { 'Pedidos das irmãs':'#e23670', 'Saúde':'#2f8f7a', 'Família':'#d9822b', 'Emprego':'#3a6fd8', 'Libertação':'#7b3fc4', 'Outros':'#7a7080' };
+  var CORES_EXTRA = ['#c2410c', '#0e7490', '#a16207', '#be185d', '#4d7c0f', '#6d28d9', '#b91c1c', '#0f766e'];
+  var LEGADO = { irmas:'Pedidos das irmãs', libertacao:'Libertação', outros:'Outros' };
+  function catNome(c){ return LEGADO[c] || c || 'Outros'; }
+  function corCat(c){
+    c = catNome(c);
+    if(CORES_FIXAS[c]) return CORES_FIXAS[c];
+    var h = 0; for(var i = 0; i < c.length; i++) h = (h * 31 + c.charCodeAt(i)) >>> 0;
+    return CORES_EXTRA[h % CORES_EXTRA.length];
+  }
+  function todasCats(){
+    var extras = [];
+    state.pedidos.forEach(function(p){ var c = catNome(p.categoria); if(CATS_FIXAS.indexOf(c) < 0 && extras.indexOf(c) < 0) extras.push(c); });
+    extras.sort();
+    return CATS_FIXAS.slice(0, 5).concat(extras, ['Outros']);
+  }
 
-  var state = { senha:'', papel:'', podeIncluir:false, pedidos:[], tab:'irmas', editId:null };
+  var state = { senha:'', papel:'', podeIncluir:false, pedidos:[], tab:'todos', editId:null };
   var $ = function(id){ return document.getElementById(id); };
 
   function store(k, v){ try{ if(v == null) localStorage.removeItem(k); else localStorage.setItem(k, v); }catch(e){} }
@@ -519,7 +544,8 @@
   function filtrar(tab){
     return state.pedidos.filter(function(p){
       if(tab === 'graca') return p.status === 'respondido';
-      return p.status !== 'respondido' && p.categoria === tab;
+      if(p.status === 'respondido') return false;
+      return tab === 'todos' || catNome(p.categoria) === tab;
     }).sort(function(a,b){
       var da = tab === 'graca' ? (a.atualizado || a.data) : a.data;
       var db = tab === 'graca' ? (b.atualizado || b.data) : b.data;
@@ -544,10 +570,17 @@
   }
 
   function render(){
-    document.querySelectorAll('.tab').forEach(function(b){
-      var t = b.getAttribute('data-tab');
+    var nav = $('tabs'); nav.innerHTML = '';
+    var abas = ['todos'].concat(todasCats().filter(function(c){ return filtrar(c).length; }), ['graca']);
+    if(abas.indexOf(state.tab) < 0) state.tab = 'todos';
+    abas.forEach(function(t){
+      var b = el('button', 'tab'); b.type = 'button'; b.setAttribute('role', 'tab');
+      if(t !== 'todos' && t !== 'graca'){ b.style.setProperty('--cat', corCat(t)); b.appendChild(el('span', 'dot')); }
+      b.appendChild(document.createTextNode(t === 'todos' ? 'Todos' : t === 'graca' ? 'Graças alcançadas 🙌' : t));
+      b.appendChild(el('span', 'count', String(filtrar(t).length)));
       b.setAttribute('aria-selected', t === state.tab ? 'true' : 'false');
-      b.querySelector('.count').textContent = filtrar(t).length;
+      b.addEventListener('click', function(){ state.tab = t; store(KEY_TAB, t); render(); });
+      nav.appendChild(b);
     });
     var list = $('list');
     list.innerHTML = '';
@@ -561,11 +594,13 @@
     var orados = orandoSet();
     itens.forEach(function(p){
       var c = el('article', 'card' + (p.status === 'respondido' ? ' answered' : ''));
+      c.style.setProperty('--cat', corCat(p.categoria));
       if(p.status === 'respondido') c.appendChild(el('div', 'grace', '🙌 Graça alcançada'));
+      c.appendChild(el('span', 'chip', catNome(p.categoria)));
       c.appendChild(el('h3', 'nome', p.nome));
       c.appendChild(el('p', 'pedido', p.pedido));
       var foot = el('div', 'foot');
-      foot.appendChild(el('span', 'when', (state.tab === 'graca' ? CAT_NOME[p.categoria] + ' · ' : '') + quando(p.data)));
+      foot.appendChild(el('span', 'when', quando(p.data)));
       var b = el('button', 'pray-btn' + (orados[p.id] ? ' done' : ''), (orados[p.id] ? '🙏 Orando' : '🙏 Estou orando') + (p.orando ? ' · ' + p.orando : ''));
       b.addEventListener('click', function(){ orar(p, b); });
       foot.appendChild(b);
@@ -615,7 +650,11 @@
   function abrirForm(p){
     state.editId = p ? p.id : null;
     $('formTitle').textContent = p ? 'Editar pedido' : 'Novo pedido';
-    $('fCategoria').value = p ? p.categoria : (state.tab === 'graca' ? 'irmas' : state.tab);
+    var sel = $('fCategoria'); sel.innerHTML = '';
+    todasCats().forEach(function(c){ var o = el('option', '', c); o.value = c; sel.appendChild(o); });
+    var nova = el('option', '', '＋ Nova categoria…'); nova.value = '__nova'; sel.appendChild(nova);
+    sel.value = p ? catNome(p.categoria) : (state.tab === 'todos' || state.tab === 'graca' ? 'Pedidos das irmãs' : state.tab);
+    $('novaCatField').hidden = true; $('fNovaCat').value = '';
     $('fNome').value = p ? p.nome : '';
     $('fPedido').value = p ? p.pedido : '';
     $('formOverlay').hidden = false;
@@ -626,9 +665,17 @@
   $('pedidoForm').addEventListener('submit', function(e){
     e.preventDefault();
     var nome = $('fNome').value.trim(), pedido = $('fPedido').value.trim();
+    var categoria = $('fCategoria').value;
+    if(categoria === '__nova'){
+      categoria = $('fNovaCat').value.trim().replace(/\s+/g, ' ');
+      if(!categoria){ toast('Escreva o nome da nova categoria.'); return; }
+      categoria = categoria.charAt(0).toUpperCase() + categoria.slice(1);
+      var igual = todasCats().filter(function(c){ return c.toLowerCase() === categoria.toLowerCase(); })[0];
+      if(igual) categoria = igual;
+    }
     if(!nome || !pedido){ toast('Preencha o nome e o pedido.'); return; }
     var btn = $('formSubmit'); btn.disabled = true; btn.textContent = 'Salvando…';
-    var body = { acao: state.editId ? 'editar' : 'incluir', id: state.editId, categoria:$('fCategoria').value, nome:nome, pedido:pedido };
+    var body = { acao: state.editId ? 'editar' : 'incluir', id: state.editId, categoria:categoria, nome:nome, pedido:pedido };
     api(body).then(function(res){
       if(!res.ok) return erro(res);
       if(!state.editId) state.tab = body.categoria;
@@ -637,13 +684,13 @@
     }).catch(function(){ toast('Sem conexão. Tente de novo.'); })
       .then(function(){ btn.disabled = false; btn.textContent = 'Salvar pedido'; });
   });
+  $('fCategoria').addEventListener('change', function(){
+    var n = this.value === '__nova'; $('novaCatField').hidden = !n; if(n) $('fNovaCat').focus();
+  });
   $('formCancel').addEventListener('click', fecharForm);
   $('formOverlay').addEventListener('click', function(e){ if(e.target === this) fecharForm(); });
   $('fab').addEventListener('click', function(){ abrirForm(null); });
 
-  document.querySelectorAll('.tab').forEach(function(b){
-    b.addEventListener('click', function(){ state.tab = b.getAttribute('data-tab'); store(KEY_TAB, state.tab); render(); });
-  });
 
   // ---------- Senha ----------
   var entrandoDiretoria = false;
@@ -689,7 +736,7 @@
   function telaoItens(){
     var tab = state.tab;
     var itens = filtrar(tab);
-    if(!itens.length && tab !== 'graca') itens = state.pedidos.filter(function(p){ return p.status !== 'respondido'; });
+    if(!itens.length && tab !== 'graca') itens = filtrar('todos');
     return itens;
   }
   function telaoShow(){
@@ -700,7 +747,7 @@
     var box = $('telaoBox');
     box.style.opacity = 0;
     setTimeout(function(){
-      $('tCat').textContent = p.status === 'respondido' ? '🙌 Graça alcançada' : CAT_NOME[p.categoria];
+      $('tCat').textContent = p.status === 'respondido' ? '🙌 Graça alcançada' : catNome(p.categoria);
       $('tNome').textContent = p.nome;
       $('tPedido').textContent = p.pedido;
       $('tFoot').textContent = (tIdx + 1) + ' de ' + itens.length + ' · toque na tela para passar';
@@ -720,7 +767,7 @@
   });
 
   // ---------- Início ----------
-  state.tab = load(KEY_TAB) || 'irmas';
+  state.tab = load(KEY_TAB) || 'todos';
   var salva = load(KEY_SENHA);
   if(salva){
     state.senha = salva;
