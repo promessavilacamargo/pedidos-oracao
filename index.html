@@ -136,8 +136,21 @@
     line-height:1.1;
   }
   header.top .sub{ font-size:.85rem; color:var(--muted); margin-top:2px; }
+  header.top{ flex-wrap:wrap; }
+  header.top > div:not(.top-actions):not(.logo-box){ flex:1 1 0; min-width:0; }
+  .top-actions{ order:-1; width:100%; display:flex; justify-content:flex-end; align-items:center; gap:8px; margin-bottom:-4px; }
+  .dir-btn{
+    background:var(--surface);
+    border:1px solid var(--accent);
+    color:var(--accent-deep);
+    border-radius:999px;
+    padding:7px 12px;
+    font-size:.8rem;
+    font-weight:700;
+    cursor:pointer;
+    white-space:nowrap;
+  }
   .role-badge{
-    margin-left:auto;
     font-size:.72rem;
     font-weight:700;
     letter-spacing:.08em;
@@ -434,7 +447,11 @@
       <h1>Pedidos de Oração</h1>
       <div class="sub">Ministério de Mulheres · Vila Camargo</div>
     </div>
-    <span class="role-badge" id="roleBadge" hidden>Diretoria</span>
+    <div class="top-actions">
+      <span class="role-badge" id="roleBadge" hidden>Diretoria</span>
+      <button class="dir-btn" id="diretoriaBtn">🔒 Área da diretoria</button>
+      <button class="dir-btn" id="sairBtn" hidden>Sair da diretoria</button>
+    </div>
   </header>
 
   <div class="status" id="status"></div>
@@ -448,8 +465,6 @@
     <button class="link-btn" id="comoInstalarBtn">Instalar no celular</button>
     <button class="link-btn" id="compartilharBtn">Enviar o app para as irmãs</button>
     <button class="link-btn" id="telaoBtn">Modo telão</button>
-    <button class="link-btn" id="diretoriaBtn">Área da diretoria</button>
-    <button class="link-btn" id="sairBtn" hidden>Sair da diretoria</button>
   </div>
 </div>
 
