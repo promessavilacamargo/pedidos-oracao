@@ -446,6 +446,7 @@
 
   <div class="footer-links">
     <button class="link-btn" id="comoInstalarBtn">Instalar no celular</button>
+    <button class="link-btn" id="compartilharBtn">Enviar o app para as irmãs</button>
     <button class="link-btn" id="telaoBtn">Modo telão</button>
     <button class="link-btn" id="diretoriaBtn">Área da diretoria</button>
     <button class="link-btn" id="sairBtn" hidden>Sair da diretoria</button>
@@ -504,7 +505,7 @@
       <b>Computador</b>
       <p>No Chrome, clique no ícone de instalar na barra de endereço (ou menu ⋮ → “Transmitir, salvar e compartilhar” → “Instalar página como app”).</p>
     </div>
-    <div class="row"><button type="button" class="btn-primary" id="instalarFechar">Entendi</button></div>
+    <div class="row"><button type="button" class="btn-ghost" id="instalarEnviar">Enviar para as irmãs</button><button type="button" class="btn-primary" id="instalarFechar">Entendi</button></div>
   </div>
 </div>
 
@@ -838,8 +839,24 @@
         + SHARE_ICON + ' (ícone com quadrado e seta) e selecione “Adicionar à Tela de Início”.</div>'
         + '<button class="x" id="iosX" aria-label="Fechar aviso">' + X_ICON + '</button></div>';
       $('iosX').onclick = function(){ store('pedidos-oracao-ios-off', '1'); renderInstall(); };
+    }else if(!load('pedidos-oracao-guia-off')){
+      box.innerHTML = '<div class="install"><div class="txt"><b>Coloque o app na tela do seu celular</b>'
+        + '<b style="display:inline;font-size:.9rem">Android:</b> no Chrome, menu ⋮ → “Instalar app” ou “Adicionar à tela inicial”.<br>'
+        + '<b style="display:inline;font-size:.9rem">iPhone:</b> no Safari, toque em Compartilhar ' + SHARE_ICON + ' → “Adicionar à Tela de Início”.</div>'
+        + '<button class="x" id="guiaX" aria-label="Fechar aviso">' + X_ICON + '</button>'
+        + '<button class="btn-ghost" id="guiaVer" style="width:100%;padding:11px 18px">Ver passo a passo</button></div>';
+      $('guiaX').onclick = function(){ store('pedidos-oracao-guia-off', '1'); renderInstall(); };
+      $('guiaVer').onclick = function(){ $('instalarOverlay').hidden = false; };
     }else box.innerHTML = '';
   }
+  var MSG = '🙏 Nosso app de Pedidos de Oração: ' + location.href.split('#')[0].split('?')[0]
+    + '\nAbra o link e toque em "Instalar aplicativo no celular" (no iPhone: Compartilhar → "Adicionar à Tela de Início"). Assim ele fica na tela do seu celular como um aplicativo. 💗';
+  function compartilhar(){
+    if(navigator.share){ navigator.share({ text: MSG }).catch(function(){}); return; }
+    window.open('https://wa.me/?text=' + encodeURIComponent(MSG), '_blank');
+  }
+  $('compartilharBtn').addEventListener('click', compartilhar);
+  $('instalarEnviar').addEventListener('click', compartilhar);
   window.addEventListener('beforeinstallprompt', function(e){ e.preventDefault(); deferredPrompt = e; renderInstall(); });
   window.addEventListener('appinstalled', function(){ deferredPrompt = null; standalone = true; renderInstall(); toast('Aplicativo instalado 💗'); });
   $('comoInstalarBtn').addEventListener('click', function(){ $('instalarOverlay').hidden = false; });
