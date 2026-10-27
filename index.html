@@ -375,6 +375,21 @@
   }
   .telao .t-fade{ transition:opacity .6s ease; }
 
+  /* ---------- Instalar ---------- */
+  .install{
+    display:flex; flex-wrap:wrap; gap:10px; align-items:center;
+    background:var(--surface); border:1px solid var(--line); border-radius:16px;
+    padding:14px; margin-bottom:16px; box-shadow:var(--shadow);
+  }
+  .install .txt{ flex:1 1 200px; font-size:.9rem; line-height:1.45; }
+  .install .txt b{ display:block; font-size:1rem; margin-bottom:2px; }
+  .install .btn-primary{ width:100%; }
+  .install .x{ align-self:flex-start; background:none; border:none; color:var(--muted); width:30px; height:30px; display:grid; place-items:center; cursor:pointer; flex:none; }
+  .ios-share{ width:18px; height:18px; vertical-align:-3px; color:var(--accent-deep); }
+  .howto{ background:var(--surface-2); border-radius:14px; padding:12px 14px; margin-bottom:10px; line-height:1.5; font-size:.93rem; }
+  .howto b{ display:block; margin-bottom:2px; }
+  .howto p{ margin:0; }
+
   .toast{
     position:fixed;
     left:50%;
@@ -423,12 +438,14 @@
   </header>
 
   <div class="status" id="status"></div>
+  <div id="installBox"></div>
 
   <nav class="tabs" role="tablist" id="tabs"></nav>
 
   <div class="list" id="list"></div>
 
   <div class="footer-links">
+    <button class="link-btn" id="comoInstalarBtn">Instalar no celular</button>
     <button class="link-btn" id="telaoBtn">Modo telão</button>
     <button class="link-btn" id="diretoriaBtn">Área da diretoria</button>
     <button class="link-btn" id="sairBtn" hidden>Sair da diretoria</button>
@@ -468,6 +485,27 @@
       <button type="submit" class="btn-primary" id="formSubmit">Salvar pedido</button>
     </div>
   </form>
+</div>
+
+<!-- Como instalar -->
+<div class="overlay" id="instalarOverlay" hidden>
+  <div class="sheet">
+    <h2>Instalar no celular</h2>
+    <p class="hint" style="margin:0 0 12px;font-size:.92rem">Assim o app fica com ícone na tela do celular, igual a um aplicativo, e abre direto nos pedidos.</p>
+    <div class="howto">
+      <b>Android</b>
+      <p>Abra o link no Chrome e toque em “Instalar aplicativo no celular”. Se o botão não aparecer, toque no menu ⋮ (três pontinhos, no canto de cima) → “Instalar app” ou “Adicionar à tela inicial”.</p>
+    </div>
+    <div class="howto">
+      <b>iPhone</b>
+      <p>Abra o link no Safari, toque no botão Compartilhar (ícone com quadrado e seta, embaixo) e selecione “Adicionar à Tela de Início”.</p>
+    </div>
+    <div class="howto">
+      <b>Computador</b>
+      <p>No Chrome, clique no ícone de instalar na barra de endereço (ou menu ⋮ → “Transmitir, salvar e compartilhar” → “Instalar página como app”).</p>
+    </div>
+    <div class="row"><button type="button" class="btn-primary" id="instalarFechar">Entendi</button></div>
+  </div>
 </div>
 
 <!-- Telão -->
@@ -775,6 +813,42 @@
     clearInterval(tTimer); $('telao').hidden = true; $('fab').hidden = !state.podeIncluir;
     try{ document.fullscreenElement && document.exitFullscreen(); }catch(e){}
   });
+
+  // ---------- Instalar no celular ----------
+  var ua = navigator.userAgent || '';
+  var isIOS = /iPad|iPhone|iPod/.test(ua) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+  var standalone = (window.matchMedia && matchMedia('(display-mode: standalone)').matches) || navigator.standalone === true;
+  var deferredPrompt = null;
+  var SHARE_ICON = '<svg class="ios-share" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12M7.5 7.5 12 3l4.5 4.5"/><path d="M5 12v6.5A2.5 2.5 0 0 0 7.5 21h9a2.5 2.5 0 0 0 2.5-2.5V12"/></svg>';
+  var X_ICON = '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M6 6l12 12M18 6 6 18"/></svg>';
+  function renderInstall(){
+    var box = $('installBox');
+    $('comoInstalarBtn').hidden = standalone;
+    if(standalone){ box.innerHTML = ''; return; }
+    if(deferredPrompt){
+      box.innerHTML = '<div class="install"><div class="txt"><b>Leve os pedidos de oração no celular</b>Fica com ícone na tela inicial, igual a um aplicativo.</div>'
+        + '<button class="btn-primary" id="installBtn">Instalar aplicativo no celular</button></div>';
+      $('installBtn').onclick = function(){
+        var p = deferredPrompt; if(!p) return;
+        p.prompt();
+        p.userChoice.finally(function(){ deferredPrompt = null; renderInstall(); });
+      };
+    }else if(isIOS && !load('pedidos-oracao-ios-off')){
+      box.innerHTML = '<div class="install"><div class="txt"><b>Instalar no iPhone</b>Toque no botão Compartilhar '
+        + SHARE_ICON + ' (ícone com quadrado e seta) e selecione “Adicionar à Tela de Início”.</div>'
+        + '<button class="x" id="iosX" aria-label="Fechar aviso">' + X_ICON + '</button></div>';
+      $('iosX').onclick = function(){ store('pedidos-oracao-ios-off', '1'); renderInstall(); };
+    }else box.innerHTML = '';
+  }
+  window.addEventListener('beforeinstallprompt', function(e){ e.preventDefault(); deferredPrompt = e; renderInstall(); });
+  window.addEventListener('appinstalled', function(){ deferredPrompt = null; standalone = true; renderInstall(); toast('Aplicativo instalado 💗'); });
+  $('comoInstalarBtn').addEventListener('click', function(){ $('instalarOverlay').hidden = false; });
+  $('instalarFechar').addEventListener('click', function(){ $('instalarOverlay').hidden = true; });
+  $('instalarOverlay').addEventListener('click', function(e){ if(e.target === this) this.hidden = true; });
+  renderInstall();
+  if('serviceWorker' in navigator){
+    window.addEventListener('load', function(){ navigator.serviceWorker.register('sw.js').catch(function(){}); });
+  }
 
   // ---------- Início ----------
   state.tab = load(KEY_TAB) || 'todos';
