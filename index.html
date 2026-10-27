@@ -208,6 +208,7 @@
     white-space:pre-line;
     word-break:break-word;
   }
+  .card .solic{ font-size:.85rem; color:var(--muted); margin:8px 0 0; font-style:italic; }
   .card .foot{
     display:flex;
     align-items:center;
@@ -358,6 +359,7 @@
   .telao .t-cat{ font-size:clamp(1rem, 2.4vw, 1.6rem); letter-spacing:.2em; text-transform:uppercase; color:#f3c0d6; font-weight:700; }
   .telao .t-nome{ font-family:"Playfair Display", Georgia, serif; font-weight:700; font-size:clamp(2.6rem, 8vw, 6.5rem); line-height:1.05; margin:3vh 0 2vh; }
   .telao .t-pedido{ font-size:clamp(1.2rem, 3vw, 2.4rem); line-height:1.45; max-width:1100px; color:#f6e3ec; }
+  .telao .t-solic{ font-size:clamp(1rem, 2.2vw, 1.6rem); color:#f3c0d6; font-style:italic; margin-top:2.5vh; }
   .telao .t-foot{ position:absolute; bottom:3vh; left:0; right:0; font-size:clamp(.9rem,1.6vw,1.2rem); color:#e7b8cd; }
   .telao .t-close{
     position:absolute;
@@ -397,20 +399,20 @@
 <body>
 
 <!-- Tela de senha -->
-<section class="lock" id="lockScreen">
+<section class="lock" id="lockScreen" hidden>
   <form class="lock-card" id="lockForm">
     <div class="logo-box"><img src="logo.png" alt="Ministério de Mulheres Vila Camargo"></div>
     <h1>Pedidos de Oração</h1>
-    <p id="lockMsg">Digite a senha do grupo de oração para entrar.</p>
+    <p id="lockMsg">Digite a senha da diretoria.</p>
     <input type="password" id="senhaInput" autocomplete="current-password" placeholder="Senha" required>
     <button class="btn-primary" type="submit" id="lockBtn">Entrar</button>
     <div class="err" id="lockErr"></div>
-    <button type="button" class="link-btn" id="lockCancel" hidden>Voltar</button>
+    <button type="button" class="link-btn" id="lockCancel">Voltar para os pedidos</button>
   </form>
 </section>
 
 <!-- App -->
-<div class="page" id="app" hidden>
+<div class="page" id="app">
   <header class="top">
     <div class="logo-box"><img src="icon-192.png" alt=""></div>
     <div>
@@ -429,7 +431,7 @@
   <div class="footer-links">
     <button class="link-btn" id="telaoBtn">Modo telão</button>
     <button class="link-btn" id="diretoriaBtn">Área da diretoria</button>
-    <button class="link-btn" id="sairBtn">Sair</button>
+    <button class="link-btn" id="sairBtn" hidden>Sair da diretoria</button>
   </div>
 </div>
 
@@ -456,6 +458,11 @@
       <label for="fPedido">Pedido *</label>
       <textarea id="fPedido" maxlength="600" required></textarea>
     </div>
+    <div class="field">
+      <label for="fSolic">Quem fez o pedido?</label>
+      <span class="hint">Opcional. Ex.: "Irmã Ana" ou "Ana (mãe)".</span>
+      <input type="text" id="fSolic" maxlength="80">
+    </div>
     <div class="row">
       <button type="button" class="btn-ghost" id="formCancel">Cancelar</button>
       <button type="submit" class="btn-primary" id="formSubmit">Salvar pedido</button>
@@ -470,6 +477,7 @@
     <div class="t-cat" id="tCat"></div>
     <div class="t-nome" id="tNome"></div>
     <div class="t-pedido" id="tPedido"></div>
+    <div class="t-solic" id="tSolic"></div>
   </div>
   <div class="t-foot" id="tFoot"></div>
 </div>
@@ -480,7 +488,8 @@
 (function(){
   // URL /exec do Apps Script da planilha "PEDIDOS DE ORAÇÃO"
   var API = 'https://script.google.com/macros/s/AKfycbw9Ac7YkCJhmeJQVUvGNAILwxPv19aksVyw0vJ6HNtMVUWX52Q4xXM5nsFFxCr4KULo7Q/exec';
-  var KEY_SENHA = 'pedidos-oracao-senha';
+  var KEY_SENHA = 'pedidos-oracao-diretoria';
+  try{ localStorage.removeItem('pedidos-oracao-senha'); }catch(e){}
   var KEY_ORANDO = 'pedidos-oracao-orando';
   var KEY_TAB = 'pedidos-oracao-aba';
   var CATS_FIXAS = ['Pedidos das irmãs', 'Saúde', 'Família', 'Emprego', 'Libertação', 'Outros'];
@@ -514,7 +523,7 @@
   }
 
   function api(body){
-    body.senha = body.senha || state.senha;
+    if(body.senha == null) body.senha = state.senha;
     return fetch(API, { method:'POST', body: JSON.stringify(body) })
       .then(function(r){ return r.json(); });
   }
@@ -526,16 +535,15 @@
     var st = $('status');
     if(res.papel === 'diretoria'){
       st.className = 'status';
-      st.textContent = 'Você está como diretoria: pode incluir, editar, marcar graça alcançada e remover pedidos a qualquer hora. Inclusão aberta para todas: ' + lower(res.janelaTexto) + '.';
-    }else if(res.janelaAberta){
-      st.className = 'status open';
-      st.textContent = '🙏 Inclusão de pedidos aberta para todas até ' + res.abertaAte + '.';
+      st.textContent = 'Você está como diretoria: pode incluir, editar, marcar graça alcançada e remover pedidos. Os botões de editar ficam embaixo de cada pedido.';
     }else{
       st.className = 'status';
-      st.textContent = 'Inclusão de pedidos aberta para todas: ' + lower(res.janelaTexto) + '. Fora desse horário, fale com a diretoria.';
+      st.textContent = 'Tem um pedido de oração? Fale com a diretoria, que ela inclui aqui. 💗';
     }
     $('roleBadge').hidden = res.papel !== 'diretoria';
     $('diretoriaBtn').hidden = res.papel === 'diretoria';
+    $('sairBtn').hidden = res.papel !== 'diretoria';
+    if(state.senha && res.papel !== 'diretoria'){ state.senha = ''; store(KEY_SENHA, null); }
     $('fab').hidden = !res.podeIncluir;
     render();
   }
@@ -599,6 +607,7 @@
       c.appendChild(el('span', 'chip', catNome(p.categoria)));
       c.appendChild(el('h3', 'nome', p.nome));
       c.appendChild(el('p', 'pedido', p.pedido));
+      if(p.solicitante) c.appendChild(el('p', 'solic', 'Pedido feito por ' + p.solicitante));
       var foot = el('div', 'foot');
       foot.appendChild(el('span', 'when', quando(p.data)));
       var b = el('button', 'pray-btn' + (orados[p.id] ? ' done' : ''), (orados[p.id] ? '🙏 Orando' : '🙏 Estou orando') + (p.orando ? ' · ' + p.orando : ''));
@@ -625,11 +634,13 @@
 
   function orar(p, btn){
     var set = orandoSet();
-    if(set[p.id]){ toast('Você já está orando por ' + p.nome + ' 💗'); return; }
-    set[p.id] = 1; store(KEY_ORANDO, JSON.stringify(set));
-    p.orando = (p.orando || 0) + 1;
-    btn.classList.add('done'); btn.textContent = '🙏 Orando · ' + p.orando;
-    api({ acao:'orar', id:p.id }).catch(function(){});
+    var marcar = !set[p.id];
+    if(marcar){ set[p.id] = 1; p.orando = (p.orando || 0) + 1; }
+    else{ delete set[p.id]; p.orando = Math.max(0, (p.orando || 0) - 1); }
+    store(KEY_ORANDO, JSON.stringify(set));
+    btn.classList.toggle('done', marcar);
+    btn.textContent = (marcar ? '🙏 Orando' : '🙏 Estou orando') + (p.orando ? ' · ' + p.orando : '');
+    api({ acao: marcar ? 'orar' : 'desorar', id:p.id }).catch(function(){});
   }
 
   function acao(nome, p){
@@ -641,8 +652,8 @@
   }
 
   function erro(res){
-    if(res.erro === 'senha'){ sair(); $('lockErr').textContent = 'A senha mudou. Digite a nova senha.'; return; }
-    if(res.erro === 'fechado'){ toast('A inclusão de pedidos está fechada agora.'); atualizar(); return; }
+    if(res.erro === 'fechado'){ toast('Só a diretoria pode incluir pedidos.'); atualizar(); return; }
+    if(res.erro === 'diretoria'){ toast('Só a diretoria pode fazer isso.'); atualizar(); return; }
     if(res.erro === 'campos'){ toast('Preencha o nome e o pedido.'); return; }
     toast('Algo deu errado. Tente de novo.');
   }
@@ -657,10 +668,11 @@
     $('novaCatField').hidden = true; $('fNovaCat').value = '';
     $('fNome').value = p ? p.nome : '';
     $('fPedido').value = p ? p.pedido : '';
+    $('fSolic').value = p ? (p.solicitante || '') : '';
     $('formOverlay').hidden = false;
     setTimeout(function(){ $('fNome').focus(); }, 50);
   }
-  function fecharForm(){ $('formOverlay').hidden = true; }
+  function fecharForm(){ $('formOverlay').hidden = true; state.editId = null; }
 
   $('pedidoForm').addEventListener('submit', function(e){
     e.preventDefault();
@@ -675,12 +687,13 @@
     }
     if(!nome || !pedido){ toast('Preencha o nome e o pedido.'); return; }
     var btn = $('formSubmit'); btn.disabled = true; btn.textContent = 'Salvando…';
-    var body = { acao: state.editId ? 'editar' : 'incluir', id: state.editId, categoria:categoria, nome:nome, pedido:pedido };
+    var body = { acao: state.editId ? 'editar' : 'incluir', id: state.editId, categoria:categoria, nome:nome, pedido:pedido, solicitante:$('fSolic').value.trim() };
     api(body).then(function(res){
       if(!res.ok) return erro(res);
       if(!state.editId) state.tab = body.categoria;
+      var editou = !!state.editId;
       fecharForm(); aplicar(res);
-      toast(state.editId ? 'Pedido atualizado.' : 'Pedido incluído. Vamos orar! 🙏');
+      toast(editou ? 'Pedido atualizado.' : 'Pedido incluído. Vamos orar! 🙏');
     }).catch(function(){ toast('Sem conexão. Tente de novo.'); })
       .then(function(){ btn.disabled = false; btn.textContent = 'Salvar pedido'; });
   });
@@ -693,11 +706,7 @@
 
 
   // ---------- Senha ----------
-  var entrandoDiretoria = false;
-  function mostrarLock(diretoria){
-    entrandoDiretoria = !!diretoria;
-    $('lockMsg').textContent = diretoria ? 'Digite a senha da diretoria.' : 'Digite a senha do grupo de oração para entrar.';
-    $('lockCancel').hidden = !diretoria;
+  function mostrarLock(){
     $('lockErr').textContent = '';
     $('senhaInput').value = '';
     $('app').hidden = true; $('fab').hidden = true;
@@ -712,20 +721,20 @@
     if(!s) return;
     var btn = $('lockBtn'); btn.disabled = true; btn.textContent = 'Entrando…';
     api({ acao:'listar', senha:s }).then(function(res){
-      if(!res.ok){ $('lockErr').textContent = res.erro === 'senha' ? 'Senha incorreta.' : 'Algo deu errado. Tente de novo.'; return; }
-      if(entrandoDiretoria && res.papel !== 'diretoria'){ $('lockErr').textContent = 'Essa não é a senha da diretoria.'; return; }
+      if(!res.ok){ $('lockErr').textContent = 'Algo deu errado. Tente de novo.'; return; }
+      if(res.papel !== 'diretoria'){ $('lockErr').textContent = 'Senha incorreta.'; return; }
       state.senha = s; store(KEY_SENHA, s);
       mostrarApp(); aplicar(res);
     }).catch(function(){ $('lockErr').textContent = 'Sem conexão. Verifique a internet.'; })
       .then(function(){ btn.disabled = false; btn.textContent = 'Entrar'; });
   });
-  $('lockCancel').addEventListener('click', function(){ if(state.senha){ mostrarApp(); $('fab').hidden = !state.podeIncluir; } });
-  $('diretoriaBtn').addEventListener('click', function(){ mostrarLock(true); });
-  function sair(){ state.senha = ''; store(KEY_SENHA, null); mostrarLock(false); }
+  $('lockCancel').addEventListener('click', function(){ mostrarApp(); $('fab').hidden = !state.podeIncluir; });
+  $('diretoriaBtn').addEventListener('click', mostrarLock);
+  function sair(){ state.senha = ''; store(KEY_SENHA, null); atualizar(); toast('Você saiu da área da diretoria.'); }
   $('sairBtn').addEventListener('click', sair);
 
   function atualizar(){
-    if(!state.senha || !$('formOverlay').hidden) return;
+    if(!$('formOverlay').hidden) return;
     api({ acao:'listar' }).then(function(res){ if(res.ok) aplicar(res); else erro(res); }).catch(function(){});
   }
   setInterval(atualizar, 60000);
@@ -741,7 +750,7 @@
   }
   function telaoShow(){
     var itens = telaoItens();
-    if(!itens.length){ $('tNome').textContent = 'Nenhum pedido ainda'; $('tCat').textContent = ''; $('tPedido').textContent = ''; $('tFoot').textContent = ''; return; }
+    if(!itens.length){ $('tNome').textContent = 'Nenhum pedido ainda'; $('tCat').textContent = ''; $('tPedido').textContent = ''; $('tSolic').textContent = ''; $('tFoot').textContent = ''; return; }
     tIdx = tIdx % itens.length;
     var p = itens[tIdx];
     var box = $('telaoBox');
@@ -750,6 +759,7 @@
       $('tCat').textContent = p.status === 'respondido' ? '🙌 Graça alcançada' : catNome(p.categoria);
       $('tNome').textContent = p.nome;
       $('tPedido').textContent = p.pedido;
+      $('tSolic').textContent = p.solicitante ? 'Pedido feito por ' + p.solicitante : '';
       $('tFoot').textContent = (tIdx + 1) + ' de ' + itens.length + ' · toque na tela para passar';
       box.style.opacity = 1;
     }, 400);
@@ -768,16 +778,10 @@
 
   // ---------- Início ----------
   state.tab = load(KEY_TAB) || 'todos';
-  var salva = load(KEY_SENHA);
-  if(salva){
-    state.senha = salva;
-    mostrarApp();
-    $('list').appendChild(el('div', 'empty', 'Carregando pedidos…'));
-    api({ acao:'listar' }).then(function(res){ if(res.ok) aplicar(res); else erro(res); })
-      .catch(function(){ $('list').innerHTML = ''; $('list').appendChild(el('div', 'empty', 'Sem conexão. Verifique a internet e recarregue.')); });
-  }else{
-    mostrarLock(false);
-  }
+  state.senha = load(KEY_SENHA) || '';
+  $('list').appendChild(el('div', 'empty', 'Carregando pedidos…'));
+  api({ acao:'listar' }).then(function(res){ if(res.ok) aplicar(res); else erro(res); })
+    .catch(function(){ $('list').innerHTML = ''; $('list').appendChild(el('div', 'empty', 'Sem conexão. Verifique a internet e recarregue.')); });
 })();
 </script>
 </body>
